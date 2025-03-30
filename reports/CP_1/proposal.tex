@@ -1,0 +1,90 @@
+\documentclass{report}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep, topsep=0pt}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+% Remove default page numbering for cover page
+\pagenumbering{gobble}
+
+\begin{document}
+
+% Cover Page
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    % Logo placeholder - replace 'logo.png' with your actual file
+    \includegraphics[]{Untitled.jpeg} \\
+    
+    \large
+    \textbf{Algorithms Analysis and Design} \\[1cm]
+    
+    \normalsize
+    \textbf{Instructor:} Hammad Khan \\[0.5cm]
+    \textbf{Team Members:} Ali Raza, Taha Hunaid \\[1cm]
+    
+    \normalsize
+    \textbf{Paper Selection Proposal} \\[0.5cm]
+    \normalsize
+    Checkpoint 1 \\[0.5cm]
+    
+    \normalsize
+    March 30, 2025 % Current date as per system instructions
+    
+    \vfill
+\end{titlepage}
+
+% Reset page numbering for content
+\newpage
+\pagenumbering{arabic}
+
+% Main Content
+\section*{Paper Selection Proposal}
+
+\subsection*{Paper Details}
+\begin{itemize}
+    \item \textbf{Title:} On Dynamic Shortest Paths Problems
+    \item \textbf{Authors:} Liam Roditty, Uri Zwick
+    \item \textbf{Conference:} ESA 2004 (European Symposium on Algorithms)
+    \item \textbf{Year:} 2004
+    \item \textbf{DOI:} \href{https://doi.org/10.1007/978-3-540-30140-0\_52}{10.1007/978-3-540-30140-0\_52}
+\end{itemize}
+
+\subsection*{Summary}
+This paper explores how to efficiently maintain shortest paths in dynamic graphs, where edges can be inserted or removed over time. Instead of recomputing shortest paths from scratch after every change, the authors present new techniques to update paths incrementally, leading to faster algorithms for real-world applications like network routing and graph-based search.
+
+The paper makes three key contributions:
+
+\begin{itemize}
+    \item \textbf{Hardness Results:} It establishes that solving incremental and decremental \textit{Single-Source Shortest Paths} (SSSP) problems is just as difficult as solving \textit{All-Pairs Shortest Paths} (APSP) in static graphs. This suggests that certain improvements in dynamic graph algorithms might be fundamentally limited.
+    
+    \item \textbf{A Randomized Fully Dynamic APSP Algorithm:} The paper introduces an algorithm for unweighted directed graphs that maintains shortest paths efficiently with an amortized update time of approximately $O(m\sqrt{n})$ and query time $O(n^{3/4})$. This makes it significantly faster than recomputing everything from scratch.
+    
+    \item \textbf{Deterministic Spanner Construction:} The authors propose a way to construct an $O(\log n)$-spanner with only $O(n)$ edges in weighted undirected graphs, using incremental SSSP. This helps reduce storage and computation while preserving path accuracy.
+\end{itemize}
+\subsection*{Justification}
+This paper is ideal for our algorithms project due to its blend of theoretical hardness and practical solutions, relevant to network analysis (e.g., routing, social graphs). Exploring reductions, randomization, and spanners enhances our grasp of graph theory and optimization.
+
+\subsection*{Implementation Feasibility}
+The paper includes clear pseudocodes (Figures 2, 3, and 4), which provides a structure for implementing its algorithms. We plan to:
+\begin{itemize}
+    \item Implement the APSP algorithm in Python using the NetworkX library. The use of BFS and random sampling makes it easier to work with using standard graph processing tools.
+    
+    \item  We may use public datasets from SNAP (Stanford Network Analysis Project) to test and benchmark performance.
+    
+    \item Implement the spanner construction using a greedy approach combined with incremental SSSP, which aligns with existing shortest path methods in Python libraries.
+\end{itemize}
+
+
+\subsection*{Team Responsibilities}
+\begin{itemize}
+    \item \textbf{Ali Raza:} Read paper, summarize theorems.
+    \item \textbf{Taha Hunaid:} Set up GitHub, source datasets, prototype APSP algorithm.
+    \item \textbf{Both:} Research and work on the reports.
+    \end{itemize}
+\end{document}
