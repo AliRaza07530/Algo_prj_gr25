@@ -1,1 +1,223 @@
+\documentclass{report}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{graphs,graphs.standard}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
 
+
+\setlist[itemize]{noitemsep, topsep=0pt}
+
+% Remove default page numbering for cover page
+\pagenumbering{gobble}
+
+\begin{document}
+
+% Cover Page
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    \includegraphics[width=0.5\textwidth]{untitiled.jpeg} \\
+    \large
+    \textbf{Algorithms Analysis and Design} \\[1cm]
+    \normalsize
+    \textbf{Instructor:} Hammad Khan \\[0.5cm]
+    \textbf{Team Members:} Ali Raza, Taha Hunaid \\[1cm]
+    \normalsize
+    \textbf{Summary and Breakdown} \\[0.5cm]
+    \normalsize
+    Checkpoint 2 \\[0.8cm]
+    \normalsize
+    April 07, 2025
+    \vfill
+\end{titlepage}
+
+% Reset page numbering for content
+\newpage
+\pagenumbering{arabic}
+
+\section*{Technical Summary: Dynamic Shortest Paths Problems}
+
+\section*{Paper Details}
+\begin{itemize}
+    \item \textbf{Title:} On Dynamic Shortest Paths Problems
+    \item \textbf{Authors:} Liam Roditty, Uri Zwick
+    \item \textbf{Conference:} ESA 2004
+    \item \textbf{Year:} 2004
+    \item \textbf{DOI:} \href{https://doi.org/10.1007/978-3-540-30140-0_52}{10.1007/978-3-540-30140-0_52}
+\end{itemize}
+
+\section*{Problem and Contribution}
+The paper addresses the challenge of efficiently maintaining the shortest paths in a dynamically changing graph, where edges can be inserted or deleted over time. We divide the key contributions as:\\ 
+
+\begin{itemize}
+    \item \textbf{Main Contribution:}
+    \begin{itemize}
+        \item \textbf{Randomized Fully-Dynamic APSP Algorithm:} \\ A new randomized algorithm is introduced for the APSP problem in unweighted directed graphs. It is especially effective for sparse graphs, offering faster update times than previous approaches. This makes it valuable for real-time applications, such as dynamic network routing, where efficient updates are essential.
+    \end{itemize}
+    \item \textbf{Other contributions}
+    \begin{itemize}
+        \item \textbf{Theoretical Foundation:} \\ The authors show that incremental and decremental single-source shortest-paths (SSSP) problems are at least as difficult as the static all-pairs shortest-paths (APSP) problem in weighted graphs. For unweighted graphs, these problems are as hard as Boolean matrix multiplication. This result highlights the complexity of dynamic SSSP and suggests that improving classical algorithms may require solving problems as hard as static APSP.
+        \item \textbf{Spanner Construction Algorithm:} \\ The paper proposes a deterministic algorithm for building $(\log n)$-spanners with $O(n)$ edges in weighted undirected graphs. This supports quicker and more efficient construction of sparse graph representations, which are critical for tasks in network design and approximation algorithms.
+    \end{itemize}
+\end{itemize}
+    
+\section*{Algorithmic Description}
+
+\subsection*{Fully Dynamic APSP Algorithm}
+
+\textbf{Input:} A dynamic directed graph \( G = (V, E) \) with edge insertions and deletions.\\
+\textbf{Output:} Approximate shortest path distances between all pairs of nodes after each update.
+
+\subsubsection*{Complexity}
+\begin{itemize}
+    \item Amortized update time: 
+    \[
+    O\left(\frac{mn^2 \log n}{t} + km + \frac{mn \log n}{k}\right)
+    \]
+    \item Worst-case query time:
+    \[
+    O\left(t + \frac{n \log n}{k}\right)
+    \]
+    \item Optimal parameter settings: \(k = \sqrt{n \log n},\ t = n^{3/4} (\log n)^{1/4}\)
+\end{itemize}
+
+\subsubsection*{Main Idea}
+\begin{itemize}
+    \item Combines a decremental APSP structure with random sampling and insertion-aware updates.
+    \item Uses a random subset \( S \subset V \) to efficiently cover long paths.
+    \item Maintains approximate trees from inserted nodes and sampled nodes for faster queries.
+\end{itemize}
+
+\subsubsection*{Algorithm Steps}
+\begin{itemize}
+    \item Maintain a decremental APSP data structure for edge deletions.
+    \item Maintain shortest path trees \( T_{\text{in}}(w), T_{\text{out}}(w) \) for \( w \in S \).
+    \item Maintain sets \( C \) for insertion centers and their limited-depth trees \( \hat{T}_{\text{in}}, \hat{T}_{\text{out}} \).
+    \item \textbf{Insertions:}
+    \begin{itemize}
+        \item If \( |C| \geq t \), start a new phase.
+        \item Add node to \( C \), rebuild its trees using Even-Shiloach up to a depth.
+    \end{itemize}
+    \item \textbf{Deletions:}
+    \begin{itemize}
+        \item Update decremental structure.
+        \item Rebuild trees for affected nodes in \( C \) and \( S \).
+    \end{itemize}
+    \item \textbf{Query \( d(u, v) \)}:
+    \[
+    d(u, v) = \min(\ell_1, \ell_2, \ell_3)
+    \]
+    \begin{itemize}
+        \item \(\ell_1\): From decremental APSP.
+        \item \(\ell_2\): \( \min_{w \in C} \{ d(u, w) + d(w, v) \} \)
+        \item \(\ell_3\): \( \min_{w \in S} \{ d(u, w) + d(w, v) \} \)
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Incremental SSSP Algorithm}
+
+\textbf{Input:} A directed graph \( G = (V, E) \), a source node \( s \), and a distance bound \( k \). Edges are inserted incrementally.\\
+\textbf{Output:} For each node \( v \), maintain \( d(s, v) \) up to distance \( k \).
+
+\subsubsection*{Complexity}
+\begin{itemize}
+    \item Total insertion time: \( O(km) \)
+    \item Query time: \( O(1) \)
+\end{itemize}
+
+\subsubsection*{Main Idea}
+\begin{itemize}
+    \item Maintains a shortest-path tree rooted at \( s \), truncated at depth \( k \).
+    \item Upon each insertion, updates distances only if they improve and remain within bound.
+\end{itemize}
+
+\subsubsection*{Algorithm Steps}
+\begin{itemize}
+    \item Initialize: \( d[s] = 0 \), \( d[v] = \infty \), \( p[v] = \text{null} \)
+    \item \textbf{Insert Edge (u, v)}:
+    \begin{itemize}
+        \item Add edge to \( G \)
+        \item Let \( d' = d[u] + \text{wt}(u,v) \)
+        \item If \( d' < d[v] \) and \( d' \leq k \), update:
+        \[
+        d[v] \leftarrow d', \quad p[v] \leftarrow u
+        \]
+        \item Recursively check neighbors of \( v \)
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Spanner Construction Algorithm}
+
+\textbf{Input:} A weighted undirected graph \( G = (V, E) \), stretch factor \( k \).\\
+\textbf{Output:} A \((2k - 1)\)-spanner \( G' = (V, E') \) with fewer edges and approximate distances.
+
+\subsubsection*{Complexity}
+\begin{itemize}
+    \item Runtime: \( O(n^2 \log n) \) for \( k = \log n \)
+    \item Edge count: \( O(n) \)
+\end{itemize}
+
+\subsubsection*{Main Idea}
+\begin{itemize}
+    \item Builds a sparse subgraph by only adding edges that significantly reduce path length.
+    \item Uses incremental SSSP for maintaining unweighted shortest paths.
+\end{itemize}
+
+\subsubsection*{Algorithm Steps}
+\begin{itemize}
+    \item Sort all edges by increasing weight.
+    \item Initialize \( E' = \emptyset \)
+    \item For each edge \( (u, v) \in E \):
+    \begin{itemize}
+        \item Compute \( d_{E'}(u, v) \) in the current spanner
+        \item If \( d_{E'}(u, v) > 2k - 1 \), add \( (u, v) \) to \( E' \)
+        \item Update incremental SSSP from \( u \) and \( v \)
+    \end{itemize}
+\end{itemize}
+\subsection*{Comparison with Existing Approaches}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Approach} & \textbf{Update Time} & \textbf{Query Time} & \textbf{Graph Type} \\ \hline
+Roditty \& Zwick & $\tilde{O}(m \sqrt{n})$ & $O(n^{3/4})$ & Unweighted directed \\ \hline
+Demetrescu et al. & $O(n^2 \log^3 n)$ & $O(1)$ & Weighted directed \\ \hline
+Static recompute & $\Omega(mn)$ & $O(1)$ & Any \\ \hline
+\end{tabular}
+\caption{Comparison with existing approaches}
+\end{table}
+
+Key advantages:
+\begin{itemize}
+    \item Fully dynamic (handles both insertions and deletions)
+    \item Better update time than static recomputation
+    \item Practical for medium-sized graphs
+\end{itemize}
+
+\subsection*{Implementation Challenges (Simplified)}
+\begin{itemize}
+    \item \textbf{Graph Representation:} The graph needs to be stored in a way that makes it quick and easy to insert or delete edges.
+    \item \textbf{Sampling:} The method involves multiple levels of sampling, which must be set up carefully to work correctly.
+    \item \textbf{Concurrency:} If updates happen at the same time, they might interfere with each other, causing errors.
+    \item \textbf{Error Handling:} Since the algorithm uses probability, it needs to make sure the results are still accurate enough.
+\end{itemize}
+
+\subsection*{Evaluation Metrics (Explained Simply)}
+\begin{itemize}
+    \item \textbf{Amortized Update Time:}It measures the average time it takes to update the graph over many operations.
+    \item \textbf{Worst-Case Query Time:} Looks at the maximum time a query might take in the worst situation.
+    \item \textbf{Memory:} How much memory the algorithm uses.
+    \item \textbf{Empirical Stretch Factor (for spanners):} Checks how close the distances in the simplified graph (spanner) are to the actual distances in the original graph.
+\end{itemize}
+\end{document}
