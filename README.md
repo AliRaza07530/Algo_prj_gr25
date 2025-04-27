@@ -19,4 +19,6 @@ The goal of this project is to understand, analyze, and implement the methodolog
 - `/docs/` - Documentation and references for citation management.
 
 ## ⚙️ Setup Instructions
-Will be added in the future.
+No additional libraries needed. 
+1) Pull the repositroy or Download the zip.
+2) Run the _algoprj.py_ file in scr folder.
