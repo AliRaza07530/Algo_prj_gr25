@@ -1,0 +1,165 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{caption}
+
+\title{Project Report: On Dynamic Shortest Paths Problems}
+\author{Ali Raza (07530) \and Taha Hunaid (ta08451)}
+\date{April 27, 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report presents our implementation and analysis of algorithms from the paper ``On Dynamic Shortest Paths Problems'' by Liam Roditty and Uri Zwick (ESA 2004). We focus on the incremental single-source shortest paths (SSSP), greedy spanner construction, and fully dynamic all-pairs shortest paths (APSP) algorithms. Our work includes code implementation in Python, testing on synthetic and Twitter-like datasets, and enhancements such as weighted edge support and iterative BFS. We verify correctness, analyze runtime complexity, and compare performance with theoretical expectations and existing methods. Challenges, solutions, and proposed improvements are discussed, highlighting the algorithms' applicability to dynamic graph problems.
+\end{abstract}
+
+\section{Background and Motivation}
+\begin{itemize}
+    \item \textbf{Context}: Introduce dynamic graph problems and their relevance in applications like network routing, social network analysis, and real-time navigation.
+    \item \textbf{Problem}: Explain the challenge of maintaining shortest paths in graphs with edge insertions and deletions.
+    \item \textbf{Importance}: Highlight the paper's contributions to efficient dynamic algorithms, including hardness results, randomized APSP, and spanner constructions.
+    \item \textbf{Motivation}: Discuss why these algorithms are suitable for study, emphasizing their theoretical and practical significance in algorithm design.
+\end{itemize}
+
+\section{Algorithm Overview}
+\subsection{Incremental SSSP}
+\begin{itemize}
+    \item \textbf{Input}: Directed graph $G=(V,E)$, source node $s$, distance bound $k$, edge insertions.
+    \item \textbf{Output}: Shortest path distances from $s$ to all nodes up to distance $k$.
+    \item \textbf{Main Idea}: Maintain a truncated shortest-path tree using iterative BFS, updating distances only when insertions improve paths within bound $k$.
+    \item \textbf{Complexity}: Insertion time $\mathcal{O}(km)$, query time $\mathcal{O}(1)$.
+\end{itemize}
+
+\subsection{Greedy Spanner Construction}
+\begin{itemize}
+    \item \textbf{Input}: Weighted undirected graph $G=(V,E)$, stretch factor $k$.
+    \item \textbf{Output}: A $(2k-1)$-spanner with reduced edges preserving approximate distances.
+    \item \textbf{Main Idea}: Greedily add edges to a sparse subgraph if they significantly reduce path lengths, using incremental SSSP for distance computations.
+    \item \textbf{Complexity}: Construction time $\mathcal{O}(nm^2)$, space $\mathcal{O}(n^2+m)$.
+\end{itemize}
+
+\subsection{Fully Dynamic APSP (Insertions Only)}
+\begin{itemize}
+    \item \textbf{Input}: Unweighted directed graph $G=(V,E)$, edge insertions.
+    \item \textbf{Output}: Approximate shortest path distances between all node pairs.
+    \item \textbf{Main Idea}: Use random sampling and BFS trees to maintain approximate distances, optimizing for insertion updates.
+    \item \textbf{Complexity}: Amortized insertion time $\mathcal{O}\left(\frac{m \log n}{k^2}\right)$, query time $\mathcal{O}\left(\frac{\log n}{k}+k\right)$.
+\end{itemize}
+
+\section{Implementation Summary}
+\begin{itemize}
+    \item \textbf{Components Implemented}:
+    \begin{itemize}
+        \item Incremental SSSP using iterative BFS with weighted edge support.
+        \item Greedy spanner construction using IncrementalSSSP for distance updates.
+        \item Partial fully dynamic APSP (insertions only) with random sampling.
+        \item Reduction from incremental SSSP to static APSP using Floyd-Warshall.
+    \end{itemize}
+    \item \textbf{Structure}: Python classes (IncrementalSSSP, Spanner, FullyDynamicAPSP) using NetworkX for graph operations.
+    \item \textbf{Strategy}: Followed pseudocodes from the paper, adapted for Python’s constraints (e.g., iterative BFS to avoid recursion limits).
+    \item \textbf{Challenges}:
+    \begin{itemize}
+        \item TypeError from missing weights (solved by adding default weight=1).
+        \item Recursion depth issues (solved by iterative BFS).
+        \item Reduction test failures (solved by verifying with Floyd-Warshall).
+    \end{itemize}
+    \item \textbf{Changes from Original}:
+    \begin{itemize}
+        \item Added weighted edge support for SSSP.
+        \item Omitted edge deletions in APSP due to complexity.
+        \item Used synthetic Twitter-like dataset instead of real data.
+    \end{itemize}
+\end{itemize}
+
+\section{Evaluation}
+\subsection{Correctness}
+\begin{itemize}
+    \item \textbf{Testing Approach}:
+    \begin{itemize}
+        \item Unit tests for edge cases (empty graphs, disconnected graphs, small $k$).
+        \item Comparison with manually computed distances and edge counts.
+        \item Specific test cases: chain with shortcut, dense graph, star graph, random insertions.
+    \end{itemize}
+    \item \textbf{Results}: All algorithms produced correct distances and spanner edge counts, verified against expected outputs.
+\end{itemize}
+
+\subsection{Runtime and Complexity}
+\begin{itemize}
+    \item \textbf{Theoretical Complexity}: As described in Section 2.
+    \item \textbf{Empirical Results}:
+    \begin{itemize}
+        \item Incremental SSSP: $\sim 0.0001$ seconds for dense graph ($n=5$), consistent with $\mathcal{O}(km)$.
+        \item Greedy Spanner: $\sim 150$ seconds for Twitter-like graph ($n=50,000, m=1.2M$), aligning with $\mathcal{O}(nm^2)$.
+        \item Fully Dynamic APSP: $\sim 0.01$ seconds for basic test ($n=5$), matching insertion time.
+        \item Reduction: $\sim 0.001$ seconds for $n=3$, as expected for $\mathcal{O}(n^3)$.
+    \end{itemize}
+    \item \textbf{Analysis}: Empirical runtimes support theoretical claims, but spanner construction is slow for large graphs due to $\mathcal{O}(nm^2)$.
+\end{itemize}
+
+\subsection{Comparisons}
+\begin{itemize}
+    \item \textbf{Baseline}: Compared with static recomputation and Demetrescu et al.’s approach.
+    \item \textbf{Table Comparison}:
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{lccc}
+            \toprule
+            Approach & Update Time & Query Time & Graph Type \\
+            \midrule
+            Roditty \& Zwick & $O(m \sqrt{n})$ & $O(n^{3/4})$ & Unweighted directed \\
+            Demetrescu et al. & $O(n^2 \log^3 n)$ & $O(1)$ & Weighted directed \\
+            Static recompute & $\Omega(mn)$ & $O(1)$ & Any \\
+            \bottomrule
+        \end{tabular}
+        \caption{Comparison with existing approaches.}
+    \end{table}
+    \item \textbf{Key Advantages}: Faster updates than static recomputation, practical for medium-sized graphs.
+\end{itemize}
+
+\section{Enhancements}
+\begin{itemize}
+    \item \textbf{Synthetic Twitter-like Dataset}:
+    \begin{itemize}
+        \item Motivation: Test scalability on large, real-world-like graphs with power-law degree distributions.
+        \item Implementation: Generated graph with $n=50,000, m=1.2M, k=15$.
+        \item Impact: Spanner reduced edges to $\sim 60,000$, but runtime was high (150 seconds), suggesting need for optimization.
+    \end{itemize}
+    \item \textbf{Weighted Edge Support in SSSP}:
+    \begin{itemize}
+        \item Motivation: Extend applicability to weighted graphs for spanner compatibility.
+        \item Implementation: Added optional weight parameter (default=1).
+        \item Impact: Enabled spanner construction without modifying core SSSP logic.
+    \end{itemize}
+    \item \textbf{Iterative BFS}:
+    \begin{itemize}
+        \item Motivation: Avoid Python’s recursion depth limit.
+        \item Implementation: Replaced recursive updates with queue-based BFS.
+        \item Impact: Improved robustness for large graphs.
+    \end{itemize}
+    \item \textbf{Proposed Optimization}:
+    \begin{itemize}
+        \item Motivation: Reduce spanner construction time.
+        \item Idea: Use approximate distance oracles to estimate $d_{E'}(u,v)$ instead of full SSSP updates.
+        \item Expected Impact: Potentially reduce runtime to $\mathcal{O}(nm \log n)$, to be tested in future work.
+    \end{itemize}
+\end{itemize}
+
+\section{Conclusion}
+\begin{itemize}
+    \item Summarize key findings: Successful implementation of SSSP, spanner, and partial APSP, verified correctness, and tested scalability.
+    \item Highlight enhancements: Synthetic dataset, weighted support, and iterative BFS improved applicability and robustness.
+    \item Discuss limitations: Spanner’s high runtime, incomplete APSP (no deletions).
+    \item Future work: Optimize spanner construction, implement edge deletions, test on real datasets.
+\end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
