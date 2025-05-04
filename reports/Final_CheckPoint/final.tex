@@ -7,6 +7,8 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{caption}
+\usepackage{cite} % Optional, for better citation formatting
+
 
 \title{Project Report: On Dynamic Shortest Paths Problems}
 \author{Ali Raza (07530) \and Taha Hunaid (ta08451)}
@@ -28,30 +30,129 @@ This report presents our implementation and analysis of algorithms from the pape
     \item \textbf{Motivation}: Discuss why these algorithms are suitable for study, emphasizing their theoretical and practical significance in algorithm design.
 \end{itemize}
 
-\section{Algorithm Overview}
-\subsection{Incremental SSSP}
+\section{Algorithmic Description}
+This section highlights the main algorithms implemented by the paper:
+
+\subsection*{Fully Dynamic APSP Algorithm}
+
+\textbf{Input:} A dynamic directed graph \( G = (V, E) \) with edge insertions and deletions.\\
+\textbf{Output:} Approximate shortest path distances between all pairs of nodes after each update.
+
+\subsubsection*{Complexity}
 \begin{itemize}
-    \item \textbf{Input}: Directed graph $G=(V,E)$, source node $s$, distance bound $k$, edge insertions.
-    \item \textbf{Output}: Shortest path distances from $s$ to all nodes up to distance $k$.
-    \item \textbf{Main Idea}: Maintain a truncated shortest-path tree using iterative BFS, updating distances only when insertions improve paths within bound $k$.
-    \item \textbf{Complexity}: Insertion time $\mathcal{O}(km)$, query time $\mathcal{O}(1)$.
+    \item Amortized update time: 
+    \[
+    O\left(\frac{mn^2 \log n}{t} + km + \frac{mn \log n}{k}\right)
+    \]
+    \item Worst-case query time:
+    \[
+    O\left(t + \frac{n \log n}{k}\right)
+    \]
+    \item Optimal parameter settings: \(k = \sqrt{n \log n},\ t = n^{3/4} (\log n)^{1/4}\)
 \end{itemize}
 
-\subsection{Greedy Spanner Construction}
+\subsubsection*{Main Idea}
 \begin{itemize}
-    \item \textbf{Input}: Weighted undirected graph $G=(V,E)$, stretch factor $k$.
-    \item \textbf{Output}: A $(2k-1)$-spanner with reduced edges preserving approximate distances.
-    \item \textbf{Main Idea}: Greedily add edges to a sparse subgraph if they significantly reduce path lengths, using incremental SSSP for distance computations.
-    \item \textbf{Complexity}: Construction time $\mathcal{O}(nm^2)$, space $\mathcal{O}(n^2+m)$.
+    \item Combines a decremental APSP structure with random sampling and insertion-aware updates.
+    \item Uses a random subset \( S \subset V \) to efficiently cover long paths.
+    \item Maintains approximate trees from inserted nodes and sampled nodes for faster queries.
 \end{itemize}
 
-\subsection{Fully Dynamic APSP (Insertions Only)}
+\subsubsection*{Algorithm Steps}
 \begin{itemize}
-    \item \textbf{Input}: Unweighted directed graph $G=(V,E)$, edge insertions.
-    \item \textbf{Output}: Approximate shortest path distances between all node pairs.
-    \item \textbf{Main Idea}: Use random sampling and BFS trees to maintain approximate distances, optimizing for insertion updates.
-    \item \textbf{Complexity}: Amortized insertion time $\mathcal{O}\left(\frac{m \log n}{k^2}\right)$, query time $\mathcal{O}\left(\frac{\log n}{k}+k\right)$.
+    \item Maintain a decremental APSP data structure for edge deletions.
+    \item Maintain shortest path trees \( T_{\text{in}}(w), T_{\text{out}}(w) \) for \( w \in S \).
+    \item Maintain sets \( C \) for insertion centers and their limited-depth trees \( \hat{T}_{\text{in}}, \hat{T}_{\text{out}} \).
+    \item \textbf{Insertions:}
+    \begin{itemize}
+        \item If \( |C| \geq t \), start a new phase.
+        \item Add node to \( C \), rebuild its trees using Even-Shiloach up to a depth.
+    \end{itemize}
+    \item \textbf{Deletions:}
+    \begin{itemize}
+        \item Update decremental structure.
+        \item Rebuild trees for affected nodes in \( C \) and \( S \).
+    \end{itemize}
+    \item \textbf{Query \( d(u, v) \)}:
+    \[
+    d(u, v) = \min(\ell_1, \ell_2, \ell_3)
+    \]
+    \begin{itemize}
+        \item \(\ell_1\): From decremental APSP.
+        \item \(\ell_2\): \( \min_{w \in C} \{ d(u, w) + d(w, v) \} \)
+        \item \(\ell_3\): \( \min_{w \in S} \{ d(u, w) + d(w, v) \} \)
+    \end{itemize}
 \end{itemize}
+
+\subsection*{Incremental SSSP Algorithm}
+
+\textbf{Input:} A directed graph \( G = (V, E) \), a source node \( s \), and a distance bound \( k \). Edges are inserted incrementally.\\
+\textbf{Output:} For each node \( v \), maintain \( d(s, v) \) up to distance \( k \).
+
+\subsubsection*{Complexity}
+\begin{itemize}
+    \item Total insertion time: \( O(km) \)
+    \item Query time: \( O(1) \)
+\end{itemize}
+
+\subsubsection*{Main Idea}
+\begin{itemize}
+    \item Maintains a shortest-path tree rooted at \( s \), truncated at depth \( k \).
+    \item Upon each insertion, updates distances only if they improve and remain within bound.
+\end{itemize}
+
+\subsubsection*{Algorithm Steps}
+\begin{itemize}
+    \item Initialize: \( d[s] = 0 \), \( d[v] = \infty \), \( p[v] = \text{null} \)
+    \item \textbf{Insert Edge (u, v)}:
+    \begin{itemize}
+        \item Add edge to \( G \)
+        \item Let \( d' = d[u] + \text{wt}(u,v) \)
+        \item If \( d' < d[v] \) and \( d' \leq k \), update:
+        \[
+        d[v] \leftarrow d', \quad p[v] \leftarrow u
+        \]
+        \item Recursively check neighbors of \( v \)
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Spanner Construction Algorithm}
+
+\textbf{Input:} A weighted undirected graph \( G = (V, E) \), stretch factor \( k \).\\
+\textbf{Output:} A \((2k - 1)\)-spanner \( G' = (V, E') \) with fewer edges and approximate distances.
+
+\subsubsection*{Complexity}
+\begin{itemize}
+    \item Runtime: \( O(n^2 \log n) \) for \( k = \log n \)
+    \item Edge count: \( O(n) \)
+\end{itemize}
+
+\subsubsection*{Main Idea}
+\begin{itemize}
+    \item Builds a sparse subgraph by only adding edges that significantly reduce path length.
+    \item Uses incremental SSSP for maintaining unweighted shortest paths.
+\end{itemize}
+
+\subsubsection*{Algorithm Steps}
+\begin{itemize}
+    \item Sort all edges by increasing weight.
+    \item Initialize \( E' = \emptyset \)
+    \item For each edge \( (u, v) \in E \):
+    \begin{itemize}
+        \item Compute \( d_{E'}(u, v) \) in the current spanner
+        \item If \( d_{E'}(u, v) > 2k - 1 \), add \( (u, v) \) to \( E' \)
+        \item Update incremental SSSP from \( u \) and \( v \)
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[h] % 'h' means here
+    \centering
+    \includegraphics[width=0.6\textwidth]{avs.png} % adjust width and filename
+    \caption{static APSP VS dynamic SSSP.}
+    \label{fig:sample}
+\end{figure}
+
+
 
 \section{Implementation Summary}
 \begin{itemize}
@@ -78,6 +179,78 @@ This report presents our implementation and analysis of algorithms from the pape
     \end{itemize}
 \end{itemize}
 
+\section{Test Cases and Their Descriptions}
+
+We designed and ran the following test cases to evaluate correctness and edge-case behavior:
+
+\subsection*{Incremental SSSP}
+
+\begin{itemize}
+    \item \textbf{Chain with Shortcut:} $n = 6$, edges = [(0,1), (1,2), (2,3), (3,4), (4,5)], $k = 4$. Insert (1,3). Verifies that shortcuts are properly detected and shortest distances are updated accordingly.
+    
+    \item \textbf{Empty Graph:} $n = 5$, $k = 2$. No edges inserted. Ensures all distances remain infinite due to unreachable vertices.
+    
+    \item \textbf{Single Edge:} $n = 3$, $k = 1$. Insert one edge (0,1). Tests whether distance updates respect the distance limit $k$.
+    
+    \item \textbf{Dense Graph:} $n = 5$, $k = 2$. Complete graph (all possible edges). Verifies behavior when many redundant paths exist.
+\end{itemize}
+
+\subsection*{Greedy Spanner}
+
+\begin{itemize}
+    \item \textbf{Random Graph:} $n = 8$, $m = 28$, $k = 2$. Checks that the number of edges in the spanner is significantly reduced, while maintaining required stretch.
+    
+    \item \textbf{Disconnected Graph:} $n = 6$, only two edges. Ensures minimal edge inclusion and preservation of disconnected components.
+    
+    \item \textbf{Uniform Weights:} $n = 6$, path graph, $k = 2$. All edges have equal weights. Tests spanner's performance on uniformly weighted graphs.
+    
+    \item \textbf{Star Graph:} $n = 8$, central node connected to all others, $k = 1$. Verifies that the spanner preserves all edges, since stretch must be exactly 1.
+\end{itemize}
+
+\subsection*{Fully Dynamic APSP (Insertions Only)}
+
+\begin{itemize}
+    \item \textbf{Basic Insertions:} $n = 5$, initial chain graph. Insert edge (0,3). Tests if distances update correctly and shortest paths are recomputed efficiently.
+    
+    \item \textbf{Random Insertions:} $n = 10$, start with path graph. Insert 5 random edges. Verifies that direct edges reduce distances as expected.
+    
+    \item \textbf{Empty Graph:} $n = 5$. No edges added. Ensures all distances remain infinite.
+    
+    \item \textbf{Complete Graph:} $n = 4$, $k = 1$. All pairwise edges added. Verifies that all distances are 1.
+\end{itemize}
+
+\subsection*{Reduction (Theorem 1)}
+
+\begin{itemize}
+    \item \textbf{Chain Graph:} $n = 3$, edges = [(0,1,1), (1,2,1)]. Tests whether Dijkstra on the transformed graph $G'$ yields correct distances on $G$.
+    
+    \item \textbf{Disconnected Graph:} $n = 2$, no edges. Verifies that distances remain infinite after reduction.
+    
+    \item \textbf{Weighted Graph:} $n = 2$, edge = (0,1,3). Ensures weighted distances are preserved after reduction.
+    
+    \item \textbf{Twitter Spanner Test:} Synthetic graph with $n = 50,000$, $m = 1,200,000$, $k = 15$. Tests scalability and performance under large real-world-like data.
+\end{itemize}
+\begin{figure}[h] % 'h' means here
+    \centering
+    \includegraphics[width=0.6\textwidth]{test.png} % adjust width and filename
+    \caption{Outputs for testcases.}
+    \label{fig:sample}
+\end{figure}
+
+
+\section*{Modifications from the Original Paper}
+
+\begin{itemize}
+    \item \textbf{Iterative BFS:} We replaced recursive updates in \texttt{IncrementalSSSP} with an iterative breadth-first search (BFS) to avoid recursion depth issues in Python.
+    
+    \item \textbf{Weighted Support in SSSP:} The original paper describes an unweighted SSSP variant, but we added optional edge weights (default weight = 1) to enable compatibility with the spanner algorithm.
+    
+    \item \textbf{Omitted Deletions:} We did not implement edge deletions in \texttt{FullyDynamicAPSP} due to their significantly higher complexity and limited relevance to our primary test scenarios.
+    
+    \item \textbf{Synthetic Dataset:} We used a synthetic Twitter-like graph (generated with similar scale and density) instead of actual Twitter data due to time constraints and accessibility issues.
+\end{itemize}
+
+
 \section{Evaluation}
 \subsection{Correctness}
 \begin{itemize}
@@ -103,7 +276,16 @@ This report presents our implementation and analysis of algorithms from the pape
     \item \textbf{Analysis}: Empirical runtimes support theoretical claims, but spanner construction is slow for large graphs due to $\mathcal{O}(nm^2)$.
 \end{itemize}
 
-\subsection{Comparisons}
+\section{Comparisons}
+Our implementation closely follows the algorithms described in the paper, but diverges in both practical and theoretical aspects.
+
+\textbf{Incremental SSSP} aligns well with the paper's expected performance of $O(km)$ insertion and $O(1)$ query time. For example, our dense graph test ran in just 0.0001 seconds for small $n$, verifying the theoretical claims. However, the paper assumes a low-level language like C++, which is inherently faster than our Python implementation. As a result, our version is less efficient for larger graphs due to Python's interpreter overhead.
+
+\textbf{Spanner Construction} correctly generates a $(2k{-}1)$-spanner and significantly reduces edge count (e.g., the Twitter-like test reduced 1.2M edges to ~60K). However, its $O(nm^2)$ runtime became a bottleneck in large graphs, taking ~150 seconds for $n{=}50{,}000$ and $m{=}1{,}200{,}000$.
+\textbf{Fully Dynamic APSP} remains incomplete, lacking edge deletions and the $\ell_1$ component. While our insertions are fast (e.g., 0.01 seconds for $n{=}5$), the missing features limit its real-world applicability. The paper mentions a worst-case query time of $O(n^{3/4})$, but in practice, our query time was much faster (closer to $O(\log n / k + k)$) likely because we tested only on small graphs.
+
+Compared to other works referenced by the paper, such as Thorup and Zwick’s earlier spanner constructions, our implementation is simpler but less optimized. Their methods often involve advanced techniques like clustering, while we stick to a greedy approach that, though correct, incurs more computation.
+
 \begin{itemize}
     \item \textbf{Baseline}: Compared with static recomputation and Demetrescu et al.’s approach.
     \item \textbf{Table Comparison}:
@@ -151,15 +333,17 @@ This report presents our implementation and analysis of algorithms from the pape
     \end{itemize}
 \end{itemize}
 
-\section{Conclusion}
-\begin{itemize}
-    \item Summarize key findings: Successful implementation of SSSP, spanner, and partial APSP, verified correctness, and tested scalability.
-    \item Highlight enhancements: Synthetic dataset, weighted support, and iterative BFS improved applicability and robustness.
-    \item Discuss limitations: Spanner’s high runtime, incomplete APSP (no deletions).
-    \item Future work: Optimize spanner construction, implement edge deletions, test on real datasets.
-\end{itemize}
+\section*{Conclusion}
 
+Through this project, we explored and implemented dynamic algorithms for solving shortest path problems in changing graphs. Inspired by Roditty and Zwick’s theoretical work, we brought their ideas to life by coding incremental single-source and partially dynamic all-pairs shortest paths algorithms. Along the way, we tackled practical challenges like recursion limits and dataset inconsistencies, and we extended our code to handle weighted graphs. Our tests—run on both random and Twitter-like networks—confirmed that our implementations work as expected. Overall, the project helped us better understand how dynamic algorithms adapt to real-world scenarios where graphs evolve over time.
+
+\section*{Future Work}
+
+There’s still a lot of room to build on what we’ve done. One clear next step is to implement a fully dynamic all-pairs shortest path algorithm that supports not just additions but also deletions of edges. Performance tuning—like making the code run faster using parallel processing or more efficient data structures—could also be valuable, especially for large datasets. In the future, we’d also like to try these algorithms on real-world networks, such as traffic systems or social media graphs, to see how well they hold up. Adding visualizations to show how the graph and paths change dynamically could make the results even more intuitive and easier to explain.
+
+\newpage
+\nocite{*}
 \bibliographystyle{plain}
-\bibliography{references}
+\bibliography{aa}
 
 \end{document}
