@@ -22,3 +22,17 @@ The goal of this project is to understand, analyze, and implement the methodolog
 No additional libraries needed. 
 1) Pull the repositroy or Download the zip.
 2) Run the _algoprj.py_ file in scr folder.
+
+## Necessary links
+
+Presentation and report
+
+https://drive.google.com/drive/folders/10-X7RVBNLW_E_yZGVh4DFzYmAn-SAE37?
+
+usp=sharing
+
+https://github.com/AliRaza07530/Algo prj gr25
+
+Github
+
+canva: https://www.canva.com/design/DAGlwwpXvvk/WHZ-JDWOJYKfFVYXLjOVNA/edit? utm_content=DAGlwwpXvvk&utm_campaign=designshare&utm_medium=link2&utm_source=shareb utton
